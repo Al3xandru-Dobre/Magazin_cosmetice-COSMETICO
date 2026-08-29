@@ -2,6 +2,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { ProductService } from '../../../core/services/product.service';
@@ -29,6 +30,8 @@ export class ProductDetailComponent implements OnInit {
   protected readonly reviewError = signal<string | null>(null);
   protected readonly reviewSuccess = signal<string | null>(null);
   protected quantity = 1;
+
+  protected readonly serverUrl = environment.apiUrl.replace('/api', '');
 
   protected readonly reviewForm = this.fb.nonNullable.group({
     rating: [5, [Validators.required, Validators.min(1), Validators.max(5)]],

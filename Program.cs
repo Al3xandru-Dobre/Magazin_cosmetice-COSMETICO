@@ -9,8 +9,34 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
+
+// =====================================================================
+// 0. SERILOG (cerinta de logging)
+//    Configureaza loggerul INAINTE de builder, ca sa prinda si erorile
+//    din timpul pornirii (ex: connection string gresit).
+//    Fisiere rolling zilnice in logs/, pastrate 30 de zile.
+// =====================================================================
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        Path.Combine("logs", "cosmetico-.log"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Inlocuieste pipeline-ul de logging implicit cu Serilog: toate injectiile
+// ILogger<T> din servicii ajung automat in consola si in fisier.
+builder.Host.UseSerilog();
 
 // =====================================================================
 // 1. SERVICII (containerul de Dependency Injection)
@@ -135,6 +161,9 @@ var app = builder.Build();
 
 // PRIMUL: prinde exceptii din orice middleware de mai jos.
 app.UseGlobalExceptionHandling();
+
+// Un singur rand de log pentru fiecare request HTTP (metoda, ruta, status, durata).
+app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
 {

@@ -53,7 +53,12 @@
         <div class="col-12 col-sm-6 col-lg-3">
           <div class="card h-100">
             <a [routerLink]="['/products', product.id]" class="text-decoration-none">
-              <div class="product-img">{{ product.name.charAt(0) }}</div>
+              @if (product.imagePath) {
+                <img [src]="serverUrl + product.imagePath" class="product-img" [alt]="product.name"
+                     loading="lazy">
+              } @else {
+                <div class="product-img">{{ product.name.charAt(0) }}</div>
+              }
             </a>
             <div class="card-body d-flex flex-column">
               <span class="text-muted small">{{ product.categoryName }} · {{ product.brandName }}</span>

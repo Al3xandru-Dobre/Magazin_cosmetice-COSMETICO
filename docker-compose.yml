@@ -36,6 +36,11 @@ services:
       Jwt__Key: "COSMETICO_cheie_docker_minim_32_caractere_2026!"
     ports:
       - "8080:8080"          # http://localhost:8080/swagger
+    volumes:
+      - product-images:/app/wwwroot/images   # imaginile uploadate supravietuiesc rebuild-urilor
+      - api-logs:/app/logs                   # logurile Serilog persista in afara containerului
 
 volumes:
   sqldata:
+  product-images:
+  api-logs:

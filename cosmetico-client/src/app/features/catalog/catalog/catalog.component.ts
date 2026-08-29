@@ -2,6 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { CartService } from '../../../core/services/cart.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { ProductService } from '../../../core/services/product.service';
@@ -30,6 +31,9 @@ export class CatalogComponent implements OnInit {
   protected sortBy = 'name';
   protected page = 1;
   protected readonly pageSize = 12;
+
+  /// ImagePath e relativ (/images/...); ii prefixam baza serverului.
+  protected readonly serverUrl = environment.apiUrl.replace('/api', '');
 
   ngOnInit(): void {
     this.categoryService.getAll().subscribe((categories) => this.categories.set(categories));

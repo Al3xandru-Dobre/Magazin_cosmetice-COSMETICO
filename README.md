@@ -13,6 +13,7 @@ docker compose up --build
 - Swagger: http://localhost:8080/swagger
 - SQL Server expus pe `localhost,1433` (user `sa`, parola `CosmeticoSql!2026`) — se poate conecta din SSMS / Azure Data Studio.
 - La pornire se aplică automat migrările și seed-ul (roluri, cont de admin, catalog).
+- Volume persistente: `sqldata` (baza de date), `product-images` (imaginile încărcate), `api-logs` (logurile).
 
 Oprire: `docker compose down` (datele persistă în volumul `sqldata`).
 Pentru reset complet al bazei: `docker compose down -v`.
@@ -91,6 +92,17 @@ Orice înregistrare nouă primește rolul **User**.
 | GET | /api/orders/my | autentificat |
 | GET | /api/orders, PUT /api/orders/{id}/status | Admin |
 | GET | /api/ingredients | public |
+| POST | /api/products/{id}/image (IFormFile) | Admin |
+
+## Logging (Serilog)
+
+- **Consolă** + **fișiere rolling zilnice** în `logs/cosmetico-YYYYMMDD.log` (păstrate 30 de zile; în Docker, volumul `api-logs`).
+- `UseSerilogRequestLogging()`: un rând de log per request HTTP (metodă, rută, status, durată).
+- `LogInformation` în servicii la operațiile de scriere (create/update/delete produse, categorii, branduri, recenzii, comenzi, register/login).
+
+## Upload imagini produs
+
+`POST /api/products/{id}/image` (Admin, `multipart/form-data`): validează extensia (.jpg/.jpeg/.png/.webp) și dimensiunea (max 5 MB), salvează în `wwwroot/images/products/product-{id}{ext}` și expune `ImagePath`. Fișierele statice sunt servite de `UseStaticFiles()` (Lab 5). În admin-ul Angular: câmp de tip fișier cu previzualizare și validare identică pe client.
 
 ## Structura proiectului
 
@@ -118,3 +130,5 @@ Exceptions/     — AppException, NotFound, BusinessRule, Forbidden
 - Logica de comanda: snapshot de pret, total calculat pe server, verificare stoc, tranzactie unica
 - Frontend Angular: 8 pagini, core/shared/features, auth JWT (interceptor + guard-uri),
   rute protejate, formulare reactive cu validare, coș persistent
+- Logging cu Serilog (consolă + fișier rolling + request logging + logging în servicii)
+- Upload imagini produs (IFormFile, validare extensie/mărime, servire statică)

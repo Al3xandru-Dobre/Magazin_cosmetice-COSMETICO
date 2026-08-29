@@ -12,11 +12,13 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewRepository _reviews;
     private readonly AppDbContext _context;
+    private readonly ILogger<ReviewService> _logger;
 
-    public ReviewService(IReviewRepository reviews, AppDbContext context)
+    public ReviewService(IReviewRepository reviews, AppDbContext context, ILogger<ReviewService> logger)
     {
         _reviews = reviews;
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<ReviewDto>> GetByProductIdAsync(int productId)
@@ -54,6 +56,10 @@ public class ReviewService : IReviewService
         await _reviews.AddAsync(review);
         await _reviews.SaveChangesAsync();
 
+        _logger.LogInformation(
+            "Recenzie creata: produs {ProductId}, user {UserId}, rating {Rating}/5",
+            review.ProductId, userId, review.Rating);
+
         return new ReviewDto(
             review.Id,
             review.ProductId,
@@ -74,5 +80,8 @@ public class ReviewService : IReviewService
 
         _reviews.Remove(review);
         await _reviews.SaveChangesAsync();
+
+        _logger.LogInformation("Recenzie stearsa: {ReviewId} (de catre {Actor}, admin={IsAdmin})",
+            reviewId, userId, isAdmin);
     }
 }

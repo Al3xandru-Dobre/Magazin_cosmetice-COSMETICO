@@ -15,5 +15,6 @@ public interface IProductService
     Task<ProductDetailDto> CreateAsync(CreateProductDto dto);
     Task<ProductDetailDto> UpdateAsync(int id, UpdateProductDto dto);
     Task DeleteAsync(int id);
+    Task<ProductDetailDto> UploadImageAsync(int id, IFormFile file);
 }
 

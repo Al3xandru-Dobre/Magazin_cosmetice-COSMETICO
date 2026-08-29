@@ -12,7 +12,12 @@
 
   <div class="row g-4">
     <div class="col-md-5">
-      <div class="product-img">{{ p.name.charAt(0) }}</div>
+      @if (p.imagePath) {
+        <img [src]="serverUrl + p.imagePath" class="img-fluid rounded" [alt]="p.name"
+             style="width: 100%; aspect-ratio: 1/1; object-fit: cover">
+      } @else {
+        <div class="product-img">{{ p.name.charAt(0) }}</div>
+      }
     </div>
 
     <div class="col-md-7">

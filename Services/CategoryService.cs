@@ -11,11 +11,13 @@ public class CategoryService : ICategoryService
 {
     private readonly IRepository<Category> _categories;
     private readonly AppDbContext _context;
+    private readonly ILogger<CategoryService> _logger;
 
-    public CategoryService(IRepository<Category> categories, AppDbContext context)
+    public CategoryService(IRepository<Category> categories, AppDbContext context, ILogger<CategoryService> logger)
     {
         _categories = categories;
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<CategoryDto>> GetAllAsync()
@@ -51,6 +53,8 @@ public class CategoryService : ICategoryService
         await _categories.AddAsync(category);
         await _categories.SaveChangesAsync();
 
+        _logger.LogInformation("Categorie creata: {CategoryId} - {Name}", category.Id, category.Name);
+
         return new CategoryDto(category.Id, category.Name, category.Description, 0);
     }
 
@@ -68,6 +72,7 @@ public class CategoryService : ICategoryService
 
         _categories.Update(category);
         await _categories.SaveChangesAsync();
+        _logger.LogInformation("Categorie actualizata: {CategoryId}", id);
 
         return await GetByIdAsync(id);
     }
@@ -84,5 +89,6 @@ public class CategoryService : ICategoryService
 
         _categories.Remove(category);
         await _categories.SaveChangesAsync();
+        _logger.LogInformation("Categorie stearsa: {CategoryId}", id);
     }
 }

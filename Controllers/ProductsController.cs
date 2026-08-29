@@ -80,5 +80,21 @@ public class ProductsController : ControllerBase
         await _service.DeleteAsync(id);
         return NoContent(); // 204: succes fara body
     }
+
+    /// <summary>
+    /// POST /api/products/5/image - ADMIN ONLY (Lab 5: IFormFile).
+    /// Imaginea ajunge in wwwroot/images/products si e servita static.
+    /// </summary>
+    [HttpPost("{id:int}/image")]
+    [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProductDetailDto>> UploadImage(int id, IFormFile file)
+    {
+        var updated = await _service.UploadImageAsync(id, file);
+        return Ok(updated);
+    }
 }
 

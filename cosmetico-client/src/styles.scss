@@ -29,6 +29,7 @@ a {
 
 .product-img {
   aspect-ratio: 1 / 1;
+  width: 100%;
   border-radius: 0.75rem 0.75rem 0 0;
   background: linear-gradient(135deg, #f5e1e5 0%, #e3c3ca 100%);
   display: flex;
@@ -37,6 +38,12 @@ a {
   font-size: 3rem;
   color: #8d4e5a;
   font-weight: 700;
+}
+
+/* <img class="product-img">: acoperi spatiul pastrand proportiile */
+img.product-img {
+  display: block;
+  object-fit: cover;
 }
 
 .text-brand {

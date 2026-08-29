@@ -11,11 +11,13 @@ public class BrandService : IBrandService
 {
     private readonly IRepository<Brand> _brands;
     private readonly AppDbContext _context;
+    private readonly ILogger<BrandService> _logger;
 
-    public BrandService(IRepository<Brand> brands, AppDbContext context)
+    public BrandService(IRepository<Brand> brands, AppDbContext context, ILogger<BrandService> logger)
     {
         _brands = brands;
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<BrandDto>> GetAllAsync()
@@ -50,6 +52,8 @@ public class BrandService : IBrandService
         await _brands.AddAsync(brand);
         await _brands.SaveChangesAsync();
 
+        _logger.LogInformation("Brand creat: {BrandId} - {Name}", brand.Id, brand.Name);
+
         return new BrandDto(brand.Id, brand.Name, brand.Country, 0);
     }
 
@@ -67,6 +71,7 @@ public class BrandService : IBrandService
 
         _brands.Update(brand);
         await _brands.SaveChangesAsync();
+        _logger.LogInformation("Brand actualizat: {BrandId}", id);
 
         return await GetByIdAsync(id);
     }
@@ -81,5 +86,6 @@ public class BrandService : IBrandService
 
         _brands.Remove(brand);
         await _brands.SaveChangesAsync();
+        _logger.LogInformation("Brand sters: {BrandId}", id);
     }
 }

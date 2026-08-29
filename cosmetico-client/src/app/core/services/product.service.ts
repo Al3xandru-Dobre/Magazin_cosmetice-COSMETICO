@@ -40,4 +40,12 @@ export class ProductService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  /// multipart/form-data, ca in Lab 5. Browserele seteaza singuri
+  /// boundary-ul, deci nu stabilim manual Content-Type.
+  uploadImage(id: number, file: File): Observable<ProductDetail> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ProductDetail>(`${this.apiUrl}/${id}/image`, formData);
+  }
 }

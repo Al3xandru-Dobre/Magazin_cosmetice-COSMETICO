@@ -15,17 +15,23 @@ namespace Magazin_cosmetice_COSMETICO.Services;
 /// </summary>
 public class ProductService : IProductService
 {
+    private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+    private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB
+
     private readonly IProductRepository _products;
     private readonly AppDbContext _context; // pentru validari FK simple
+    private readonly IWebHostEnvironment _environment;
     private readonly ILogger<ProductService> _logger;
 
     public ProductService(
         IProductRepository products,
         AppDbContext context,
+        IWebHostEnvironment environment,
         ILogger<ProductService> logger)
     {
         _products = products;
         _context = context;
+        _environment = environment;
         _logger = logger;
     }
 
@@ -142,6 +148,50 @@ public class ProductService : IProductService
 
         if (!await _context.Brands.AnyAsync(b => b.Id == brandId))
             throw new NotFoundException("Brand-ul", brandId);
+    }
+
+    /// <summary>
+    /// Salveaza imaginea in wwwroot/images/products si seteaza ImagePath-ul
+    /// produsului (URL relativ, servit de UseStaticFiles — vezi Lab 5).
+    /// </summary>
+    public async Task<ProductDetailDto> UploadImageAsync(int id, IFormFile file)
+    {
+        var product = await _products.GetByIdAsync(id)
+            ?? throw new NotFoundException("Produsul", id);
+
+        if (file is null || file.Length == 0)
+            throw new BusinessRuleException("Niciun fisier primit.");
+
+        if (file.Length > MaxImageSizeBytes)
+            throw new BusinessRuleException("Imaginea depaseste 5 MB.");
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!AllowedImageExtensions.Contains(extension))
+            throw new BusinessRuleException(
+                $"Extensie neacceptata '{extension}'. Permise: {string.Join(", ", AllowedImageExtensions)}.");
+
+        // wwwroot/images/products — Directory.CreateDirectory e safe daca exista deja.
+        var imagesFolder = Path.Combine(_environment.WebRootPath, "images", "products");
+        Directory.CreateDirectory(imagesFolder);
+
+        // Nume determinist pe produs: la re-upload se suprascrie vechea imagine,
+        // fara sa ramanem cu fisiere orfane in folder.
+        var fileName = $"product-{id}{extension}";
+        var fullPath = Path.Combine(imagesFolder, fileName);
+
+        await using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        product.ImagePath = $"/images/products/{fileName}";
+        _products.Update(product);
+        await _products.SaveChangesAsync();
+
+        _logger.LogInformation("Imagine incarcata pentru produsul {ProductId}: {FileName} ({Size} bytes)",
+            id, fileName, file.Length);
+
+        return await GetByIdAsync(id);
     }
 }
 

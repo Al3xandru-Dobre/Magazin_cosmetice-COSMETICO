@@ -9,11 +9,16 @@ public class AuthService : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ITokenService _tokenService;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(UserManager<ApplicationUser> userManager, ITokenService tokenService)
+    public AuthService(
+        UserManager<ApplicationUser> userManager,
+        ITokenService tokenService,
+        ILogger<AuthService> logger)
     {
         _userManager = userManager;
         _tokenService = tokenService;
+        _logger = logger;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -39,6 +44,8 @@ public class AuthService : IAuthService
 
         await _userManager.AddToRoleAsync(user, "User");
 
+        _logger.LogInformation("Cont nou inregistrat: {Email} (rol User)", user.Email);
+
         return await _tokenService.CreateTokenAsync(user);
     }
 
@@ -49,7 +56,12 @@ public class AuthService : IAuthService
         // Mesaj generic intentionat: specificarea carei campuri e gresit
         // ar ajuta un atacator sa confirme ce adrese de email exista.
         if (user is null || !await _userManager.CheckPasswordAsync(user, dto.Password))
+        {
+            _logger.LogWarning("Autentificare esuata pentru {Email}", dto.Email.Trim());
             throw new BusinessRuleException("Email sau parola incorecta.");
+        }
+
+        _logger.LogInformation("Autentificare reusita: {Email}", user.Email);
 
         return await _tokenService.CreateTokenAsync(user);
     }

@@ -35,6 +35,9 @@ export class AdminProductsComponent implements OnInit {
   protected readonly successMessage = signal<string | null>(null);
   protected selectedIngredientIds = new Set<number>();
 
+  protected readonly selectedFile = signal<File | null>(null);
+  protected readonly previewUrl = signal<string | null>(null);
+
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
     description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
@@ -62,6 +65,7 @@ export class AdminProductsComponent implements OnInit {
   startCreate(): void {
     this.editingId.set(null);
     this.selectedIngredientIds.clear();
+    this.clearFileSelection();
     this.form.reset({ name: '', description: '', price: null, stockQuantity: 0, categoryId: null, brandId: null, isActive: true });
     this.showForm.set(true);
     this.errorMessage.set(null);
@@ -71,6 +75,7 @@ export class AdminProductsComponent implements OnInit {
   startEdit(id: number): void {
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    this.clearFileSelection();
 
     this.productService.getById(id).subscribe({
       next: (product: ProductDetail) => {
@@ -89,6 +94,37 @@ export class AdminProductsComponent implements OnInit {
       },
       error: (err) => this.errorMessage.set(extractApiError(err)),
     });
+  }
+
+  /// Validare client identica cu cea de pe server: doar imagini, maxim 5 MB.
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      this.errorMessage.set('Doar imagini JPG, PNG sau WEBP sunt acceptate.');
+      input.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.errorMessage.set('Imaginea depaseste 5 MB.');
+      input.value = '';
+      return;
+    }
+
+    this.errorMessage.set(null);
+    this.clearFileSelection();
+    this.selectedFile.set(file);
+    this.previewUrl.set(URL.createObjectURL(file));
+  }
+
+  clearFileSelection(): void {
+    if (this.previewUrl()) {
+      URL.revokeObjectURL(this.previewUrl()!);
+    }
+    this.selectedFile.set(null);
+    this.previewUrl.set(null);
   }
 
   toggleIngredient(id: number, checked: boolean): void {
@@ -123,15 +159,37 @@ export class AdminProductsComponent implements OnInit {
 
     request$.subscribe({
       next: (product) => {
-        this.successMessage.set(
-          editingId ? `Produsul "${product.name}" a fost actualizat.` : `Produsul "${product.name}" a fost creat.`,
-        );
-        this.showForm.set(false);
-        this.editingId.set(null);
-        this.load();
+        // Produsul e salvat; urmeaza imaginea (daca e selectata) — POST /api/products/{id}/image.
+        const file = this.selectedFile();
+        if (file) {
+          this.productService.uploadImage(product.id, file).subscribe({
+            next: () => this.afterSave(product.name, editingId),
+            error: (err) => {
+              this.errorMessage.set(
+                `Produsul a fost salvat, dar imaginea nu a putut fi incarcata: ${extractApiError(err)}`,
+              );
+              this.showForm.set(false);
+              this.editingId.set(null);
+              this.clearFileSelection();
+              this.load();
+            },
+          });
+        } else {
+          this.afterSave(product.name, editingId);
+        }
       },
       error: (err) => this.errorMessage.set(extractApiError(err)),
     });
+  }
+
+  private afterSave(name: string, editingId: number | null): void {
+    this.successMessage.set(
+      editingId ? `Produsul "${name}" a fost actualizat.` : `Produsul "${name}" a fost creat.`,
+    );
+    this.showForm.set(false);
+    this.editingId.set(null);
+    this.clearFileSelection();
+    this.load();
   }
 
   remove(id: number, name: string): void {
