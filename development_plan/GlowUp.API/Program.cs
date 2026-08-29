@@ -1,9 +1,9 @@
-﻿using System.Text;
-using Magazin_cosmetice_COSMETICO.Data;
-using Magazin_cosmetice_COSMETICO.Middleware;
-using Magazin_cosmetice_COSMETICO.Models.Identity;
-using Magazin_cosmetice_COSMETICO.Repositories;
-using Magazin_cosmetice_COSMETICO.Services;
+using System.Text;
+using GlowUp.API.Data;
+using GlowUp.API.Middleware;
+using GlowUp.API.Models.Identity;
+using GlowUp.API.Repositories;
+using GlowUp.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// ---- Baza de date ----
+// ---- Baza de date (Lab 4) ----
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -71,17 +71,9 @@ builder.Services.AddAuthorization();
 // disposed dupa primul request ("captive dependency").
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 // ---- Services ----
 builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IBrandService, BrandService>();
-builder.Services.AddScoped<IReviewService, ReviewService>();
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
 
 // ---- CORS pentru frontend ----
 const string FrontendPolicy = "AllowFrontend";
@@ -96,7 +88,7 @@ builder.Services.AddCors(options =>
 // ---- Swagger cu suport pentru butonul Authorize ----
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "COSMETICO API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "GlowUp API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -142,7 +134,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();            // serveste wwwroot/images
+app.UseStaticFiles();            // serveste wwwroot/images (Lab 5)
 
 app.UseCors(FrontendPolicy);     // INAINTE de Authentication
 
@@ -153,8 +145,7 @@ app.UseAuthorization();          // CE ai voie -> verifica rolurile
 
 app.MapControllers();
 
-// Seed: aplica migrarile, creeaza rolurile Admin/User, contul de
-// administrator si datele de catalog la pornire.
-await SeedData.InitializeAsync(app.Services);
+// Seed: creeaza rolurile Admin/User si contul de administrator la pornire.
+// await SeedData.InitializeAsync(app.Services);
 
 app.Run();

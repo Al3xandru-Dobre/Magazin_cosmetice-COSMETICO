@@ -1,0 +1,36 @@
+PACHETE NUGET NECESARE (.NET 8)
+================================
+
+Package Manager Console -> Install-Package <nume> -Version 8.0.18
+
+  Microsoft.EntityFrameworkCore                          8.0.18
+  Microsoft.EntityFrameworkCore.SqlServer                8.0.18
+  Microsoft.EntityFrameworkCore.Tools                    8.0.18
+  Microsoft.EntityFrameworkCore.Design                   8.0.18
+  Microsoft.AspNetCore.Identity.EntityFrameworkCore      8.0.18
+  Microsoft.AspNetCore.Authentication.JwtBearer          8.0.18
+  Swashbuckle.AspNetCore                                 6.6.2
+
+Optional (Logging - 2p):
+  Serilog.AspNetCore                                     8.0.2
+  Serilog.Sinks.File                                     5.0.0
+
+
+COMENZI MIGRATIONS (Package Manager Console)
+=============================================
+  Add-Migration InitialCreate
+  Update-Database
+
+  Add-Migration AddIngredients     (dupa modificari de model)
+  Update-Database
+
+  Remove-Migration                 (anuleaza ultima migrare NEAPLICATA)
+  Update-Database <NumeMigrare>    (revine la o migrare anterioara)
+
+
+ORDINEA DE INSTALARE A FISIERELOR IN PROIECT
+=============================================
+Copiaza continutul folderului GlowUp.API/ peste proiectul tau nou
+de tip "ASP.NET Core Web API" (.NET 8, fara Minimal APIs -> bifeaza
+"Use controllers"). Ajusteaza namespace-ul GlowUp.API daca ai
+denumit proiectul altfel.
