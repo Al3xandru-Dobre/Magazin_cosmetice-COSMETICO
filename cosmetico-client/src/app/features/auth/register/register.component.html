@@ -1,0 +1,71 @@
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm mt-4">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-4 text-center">Creare cont</h1>
+
+        @if (errorMessage(); as msg) {
+          <div class="alert alert-danger py-2">{{ msg }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="fullName">Nume complet</label>
+            <input id="fullName" class="form-control" formControlName="fullName"
+                   [class.is-invalid]="form.controls.fullName.touched && form.controls.fullName.invalid">
+            @if (form.controls.fullName.touched; as _) {
+              @if (form.controls.fullName.hasError('required')) {
+                <div class="invalid-feedback">Numele este obligatoriu.</div>
+              } @else if (form.controls.fullName.hasError('minlength')) {
+                <div class="invalid-feedback">Minim 3 caractere.</div>
+              }
+            }
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <input id="email" type="email" class="form-control" formControlName="email"
+                   [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid">
+            @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+              <div class="invalid-feedback">Emailul este obligatoriu.</div>
+            } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+              <div class="invalid-feedback">Adresa de email nu este valida.</div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="password">Parola</label>
+            <input id="password" type="password" class="form-control" formControlName="password"
+                   [class.is-invalid]="form.controls.password.touched && form.controls.password.invalid">
+            <div class="form-text">Minim 6 caractere, cel putin o majuscula si o cifra.</div>
+            @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+              <div class="invalid-feedback">Parola este obligatorie.</div>
+            } @else if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+              <div class="invalid-feedback">Minim 6 caractere.</div>
+            } @else if (form.controls.password.touched && form.controls.password.hasError('pattern')) {
+              <div class="invalid-feedback">Parola trebuie sa contina o majuscula si o cifra.</div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="confirmPassword">Confirma parola</label>
+            <input id="confirmPassword" type="password" class="form-control" formControlName="confirmPassword"
+                   [class.is-invalid]="form.controls.confirmPassword.touched && (
+                     form.controls.confirmPassword.invalid || form.hasError('passwordMismatch'))">
+            @if (form.controls.confirmPassword.touched && form.hasError('passwordMismatch')) {
+              <div class="invalid-feedback">Parolele nu coincid.</div>
+            }
+          </div>
+
+          <button class="btn btn-primary w-100" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Se creeaza contul...' : 'Inregistreaza-te' }}
+          </button>
+        </form>
+
+        <p class="text-center mt-3 mb-0 small">
+          Ai deja cont? <a routerLink="/login">Autentifica-te</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

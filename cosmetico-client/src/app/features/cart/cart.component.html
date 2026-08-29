@@ -1,0 +1,89 @@
+<h1 class="h3 mb-4">Cosul de cumparaturi</h1>
+
+@if (cart.items().length === 0) {
+  <div class="alert alert-info">
+    Cosul este gol. <a routerLink="/">Inapoi la catalog</a>
+  </div>
+} @else {
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Produs</th>
+                <th class="text-center">Cantitate</th>
+                <th class="text-end">Pret</th>
+                <th class="text-end">Subtotal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of cart.items(); track item.productId) {
+                <tr>
+                  <td>{{ item.name }}</td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-outline-secondary" (click)="decrease(item.productId, item.quantity)">-</button>
+                      <span class="btn btn-outline-secondary disabled">{{ item.quantity }}</span>
+                      <button class="btn btn-outline-secondary" (click)="increase(item.productId, item.quantity)"
+                              [disabled]="item.quantity >= item.stockQuantity">+</button>
+                    </div>
+                  </td>
+                  <td class="text-end">{{ item.price | number: '1.2-2' }} lei</td>
+                  <td class="text-end fw-semibold">{{ item.price * item.quantity | number: '1.2-2' }} lei</td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" (click)="remove(item.productId)">Sterge</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <td colspan="3" class="text-end fw-bold">Total</td>
+                <td class="text-end fw-bold text-brand">{{ cart.total() | number: '1.2-2' }} lei</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h5">Finalizare comanda</h2>
+
+          @if (errorMessage(); as msg) {
+            <div class="alert alert-danger py-2">{{ msg }}</div>
+          }
+
+          <form [formGroup]="form" (ngSubmit)="placeOrder()" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="address">Adresa de livrare</label>
+              <textarea id="address" class="form-control" rows="3" formControlName="shippingAddress"
+                        placeholder="Strada, numar, oras, judet"
+                        [class.is-invalid]="form.controls.shippingAddress.touched && form.controls.shippingAddress.invalid"></textarea>
+              @if (form.controls.shippingAddress.touched && form.controls.shippingAddress.hasError('required')) {
+                <div class="invalid-feedback">Adresa este obligatorie.</div>
+              } @else if (form.controls.shippingAddress.touched && form.controls.shippingAddress.hasError('minlength')) {
+                <div class="invalid-feedback">Minim 10 caractere.</div>
+              }
+            </div>
+
+            @if (!auth.isLoggedIn()) {
+              <button class="btn btn-primary w-100" type="submit">Autentificare si plasare comanda</button>
+              <p class="text-muted small mt-2 mb-0">Vei fi redirectat la login, apoi revii aici.</p>
+            } @else {
+              <button class="btn btn-primary w-100" type="submit" [disabled]="submitting()">
+                {{ submitting() ? 'Se plaseaza comanda...' : 'Plaseaza comanda' }}
+              </button>
+            }
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,123 @@
+@if (error(); as msg) {
+  <div class="alert alert-danger">{{ msg }}</div>
+  <a routerLink="/" class="btn btn-outline-secondary">Inapoi la catalog</a>
+} @else if (product(); as p) {
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a routerLink="/">Catalog</a></li>
+      <li class="breadcrumb-item">{{ p.categoryName }}</li>
+      <li class="breadcrumb-item active" aria-current="page">{{ p.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-md-5">
+      <div class="product-img">{{ p.name.charAt(0) }}</div>
+    </div>
+
+    <div class="col-md-7">
+      <h1 class="h3">{{ p.name }}</h1>
+      <p class="text-muted">{{ p.categoryName }} · {{ p.brandName }}</p>
+
+      @if (p.reviewCount > 0) {
+        <p class="text-warning fs-5">{{ stars(p.averageRating) }}
+          <span class="text-muted small fs-6">{{ p.averageRating }} / 5 ({{ p.reviewCount }} recenzii)</span>
+        </p>
+      }
+
+      <p class="fs-4 fw-bold text-brand">{{ p.price | number: '1.2-2' }} lei</p>
+
+      @if (p.stockQuantity > 0) {
+        <p><span class="badge text-bg-success">In stoc: {{ p.stockQuantity }} buc.</span></p>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <label class="form-label mb-0 me-1" for="qty">Cantitate</label>
+          <input id="qty" type="number" class="form-control" style="width: 5rem" min="1"
+                 [max]="p.stockQuantity" [(ngModel)]="quantity" />
+          <button class="btn btn-primary" (click)="addToCart()">Adauga in cos</button>
+        </div>
+      } @else {
+        <p><span class="badge text-bg-secondary">Stoc epuizat</span></p>
+      }
+
+      <h2 class="h5 mt-4">Descriere</h2>
+      <p>{{ p.description }}</p>
+
+      @if (p.ingredients.length > 0) {
+        <h2 class="h5 mt-4">Ingrediente active</h2>
+        @for (ingredient of p.ingredients; track ingredient.id) {
+          <span class="badge me-1 mb-1" [class.text-bg-warning]="ingredient.isAllergen" [class.text-bg-light]="!ingredient.isAllergen"
+                [title]="ingredient.isAllergen ? 'Potential alergen' : ''">
+            {{ ingredient.name }}@if (ingredient.isAllergen) { * }
+          </span>
+        }
+        <p class="text-muted small mt-1">* marcheaza potentiali alergeni.</p>
+      }
+    </div>
+  </div>
+
+  <section class="mt-5">
+    <h2 class="h4 mb-3">Recenzii ({{ reviews().length }})</h2>
+
+    @if (reviews().length === 0) {
+      <p class="text-muted">Nu exista inca recenzii pentru acest produs.</p>
+    } @else {
+      <div class="row g-3">
+        @for (review of reviews(); track review.id) {
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body py-3">
+                <div class="d-flex justify-content-between">
+                  <strong>{{ review.userName }}</strong>
+                  <span class="text-warning">{{ stars(review.rating) }}</span>
+                </div>
+                <p class="mb-1">{{ review.comment }}</p>
+                <small class="text-muted">{{ review.createdAt | date: 'dd.MM.yyyy' }}</small>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (auth.isLoggedIn()) {
+      <div class="card mt-4">
+        <div class="card-body">
+          <h3 class="h6">Adauga o recenzie</h3>
+
+          @if (reviewError(); as msg) {
+            <div class="alert alert-danger py-2">{{ msg }}</div>
+          }
+          @if (reviewSuccess(); as msg) {
+            <div class="alert alert-success py-2">{{ msg }}</div>
+          }
+
+          <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="rating">Rating</label>
+              <select id="rating" class="form-select" style="width: auto" formControlName="rating">
+                <option [value]="5">5 stele</option>
+                <option [value]="4">4 stele</option>
+                <option [value]="3">3 stele</option>
+                <option [value]="2">2 stele</option>
+                <option [value]="1">1 stea</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="comment">Comentariu</label>
+              <textarea id="comment" class="form-control" rows="3" formControlName="comment"
+                        [class.is-invalid]="reviewForm.controls.comment.touched && reviewForm.controls.comment.invalid"></textarea>
+              @if (reviewForm.controls.comment.touched && reviewForm.controls.comment.hasError('required')) {
+                <div class="invalid-feedback">Comentariul este obligatoriu.</div>
+              } @else if (reviewForm.controls.comment.touched && reviewForm.controls.comment.hasError('minlength')) {
+                <div class="invalid-feedback">Minim 10 caractere.</div>
+              }
+            </div>
+            <button class="btn btn-primary" type="submit">Trimite recenzia</button>
+          </form>
+        </div>
+      </div>
+    } @else {
+      <p class="text-muted mt-3"><a routerLink="/login">Autentifica-te</a> pentru a lasa o recenzie.</p>
+    }
+  </section>
+}

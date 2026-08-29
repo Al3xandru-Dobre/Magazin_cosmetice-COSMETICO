@@ -1,0 +1,57 @@
+<h1 class="h3 mb-4">Administrare comenzi</h1>
+
+@if (error(); as msg) {
+  <div class="alert alert-danger">{{ msg }}</div>
+}
+@if (successMessage(); as msg) {
+  <div class="alert alert-success">{{ msg }}</div>
+}
+
+@if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-brand" role="status"></div>
+  </div>
+} @else if (orders().length === 0) {
+  <div class="alert alert-info">Nu exista comenzi.</div>
+} @else {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Data</th>
+            <th>Adresa livrare</th>
+            <th>Produse</th>
+            <th class="text-end">Total</th>
+            <th>Status</th>
+            <th>Schimba status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order.id) {
+            <tr>
+              <td>{{ order.id }}</td>
+              <td>{{ order.placedAt | date: 'dd.MM.yyyy HH:mm' }}</td>
+              <td class="small" style="max-width: 18rem">{{ order.shippingAddress }}</td>
+              <td class="small">
+                @for (item of order.items; track item.productId) {
+                  <div>{{ item.productName }} × {{ item.quantity }}</div>
+                }
+              </td>
+              <td class="text-end fw-semibold">{{ order.totalAmount | number: '1.2-2' }} lei</td>
+              <td><span class="badge {{ statusClass(order.status) }}">{{ order.status }}</span></td>
+              <td>
+                <select class="form-select form-select-sm" [value]="order.status" (change)="onStatusChange(order, $event)">
+                  @for (status of statuses; track status) {
+                    <option [value]="status" [selected]="status === order.status">{{ status }}</option>
+                  }
+                </select>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

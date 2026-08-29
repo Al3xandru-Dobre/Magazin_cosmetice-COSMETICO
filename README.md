@@ -1,6 +1,6 @@
-# COSMETICO — Magazin de cosmetice (API)
+# COSMETICO — Magazin de cosmetice (API + Angular)
 
-API REST pentru un magazin de cosmetice, construit pe **ASP.NET Core 8 (Web API)** cu arhitectura pe straturi: `Controller → Service → Repository → EF Core / SQL Server`.
+API REST pentru un magazin de cosmetice, construit pe **ASP.NET Core 8 (Web API)** cu arhitectura pe straturi: `Controller → Service → Repository → EF Core / SQL Server`, plus **client Angular 20** (`cosmetico-client/`).
 
 ## Rulare cu Docker (recomandat)
 
@@ -27,6 +27,46 @@ dotnet run
 
 Swagger: http://localhost:5080/swagger
 
+## Frontend Angular (cosmetico-client)
+
+Necesită Node.js LTS. API-ul trebuie să ruleze (Docker pe `localhost:8080` sau `dotnet run` pe `localhost:5080` — vezi `src/environments/environment.ts`).
+
+```
+cd cosmetico-client
+npm install
+npm start
+```
+
+Aplicația: http://localhost:4200
+
+### Pagini
+
+| Ruta | Descriere | Acces |
+|---|---|---|
+| `/` | Catalog: căutare, filtrare pe categorie, sortare, paginare | public |
+| `/products/:id` | Detalii produs: ingrediente, recenzii, adaugă în coș | public |
+| `/login`, `/register` | Autentificare / înregistrare | public |
+| `/cart` | Coș (persistat în localStorage) + plasare comandă | public / login la finalizare |
+| `/orders/my` | Comenzile mele | autentificat |
+| `/admin/products` | Admin: tabel + formular create/edit produse | Admin |
+| `/admin/orders` | Admin: lista comenzi + schimbare status | Admin |
+
+### Structura frontend-ului
+
+```
+cosmetico-client/src/app/
+├── core/       — servicii (auth, cart, product, order...), guard-uri, interceptoare
+├── shared/     — modele TypeScript (oglindă peste DTO-urile API) + utilitare
+├── features/   — paginile, grupate pe funcționalitate (auth, catalog, cart, orders, admin)
+├── app.routes.ts
+└── app.config.ts
+```
+
+- `jwt.interceptor.ts` atașează automat `Authorization: Bearer ...`
+- `error.interceptor.ts` face logout + redirect la login la 401
+- `auth.guard` / `admin.guard` protejează rutele
+- formulare reactive cu validare pe client (aceleași reguli ca pe server)
+
 ## Conturi seed
 
 | Email | Parola | Rol |
@@ -50,6 +90,7 @@ Orice înregistrare nouă primește rolul **User**.
 | POST | /api/orders | autentificat |
 | GET | /api/orders/my | autentificat |
 | GET | /api/orders, PUT /api/orders/{id}/status | Admin |
+| GET | /api/ingredients | public |
 
 ## Structura proiectului
 
@@ -75,3 +116,5 @@ Exceptions/     — AppException, NotFound, BusinessRule, Forbidden
 - Exception handling global cu ProblemDetails (404/400/403, nu 500)
 - Paginare, filtrare, sortare pe catalog
 - Logica de comanda: snapshot de pret, total calculat pe server, verificare stoc, tranzactie unica
+- Frontend Angular: 8 pagini, core/shared/features, auth JWT (interceptor + guard-uri),
+  rute protejate, formulare reactive cu validare, coș persistent

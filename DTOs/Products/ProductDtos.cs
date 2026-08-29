@@ -26,6 +26,7 @@ public record ProductDetailDto(
     int StockQuantity,
     string? ImagePath,
     DateTime CreatedAt,
+    bool IsActive,
     int CategoryId,
     string CategoryName,
     int BrandId,

@@ -1,0 +1,34 @@
+<h1 class="h3 mb-4">Comenzile mele</h1>
+
+@if (error(); as msg) {
+  <div class="alert alert-danger">{{ msg }}</div>
+} @else if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-brand" role="status"></div>
+  </div>
+} @else if (orders().length === 0) {
+  <div class="alert alert-info">Nu ai plasat inca nicio comanda.</div>
+} @else {
+  @for (order of orders(); track order.id) {
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Comanda #{{ order.id }} · {{ order.placedAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+        <span class="badge {{ statusClass(order.status) }}">{{ order.status }}</span>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-2">
+          @for (item of order.items; track item.productId) {
+            <li class="d-flex justify-content-between">
+              <span>{{ item.productName }} × {{ item.quantity }}</span>
+              <span>{{ item.lineTotal | number: '1.2-2' }} lei</span>
+            </li>
+          }
+        </ul>
+        <div class="d-flex justify-content-between text-muted small">
+          <span>Livrare la: {{ order.shippingAddress }}</span>
+          <span class="fw-bold text-dark">Total: {{ order.totalAmount | number: '1.2-2' }} lei</span>
+        </div>
+      </div>
+    </div>
+  }
+}

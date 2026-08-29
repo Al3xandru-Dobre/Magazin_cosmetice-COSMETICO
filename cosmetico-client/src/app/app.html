@@ -1,0 +1,41 @@
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" [routerLink]="['/']">COSMETICO</a>
+
+    <div class="navbar-nav me-auto d-flex flex-row gap-3">
+      <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Catalog
+      </a>
+      @if (auth.isLoggedIn()) {
+        <a class="nav-link" routerLink="/orders/my">Comenzile mele</a>
+      }
+      @if (auth.isAdmin()) {
+        <a class="nav-link" routerLink="/admin/products">Admin: produse</a>
+        <a class="nav-link" routerLink="/admin/orders">Admin: comenzi</a>
+      }
+    </div>
+
+    <a class="btn btn-outline-light btn-sm me-3 position-relative" routerLink="/cart">
+      Cos
+      @if (cart.count() > 0) {
+        <span class="badge rounded-pill bg-danger ms-1">{{ cart.count() }}</span>
+      }
+    </a>
+
+    @if (auth.isLoggedIn()) {
+      <span class="navbar-text me-2 d-none d-md-inline">Salut, {{ auth.displayName() }}</span>
+      <button type="button" class="btn btn-sm btn-light" (click)="logout()">Iesire</button>
+    } @else {
+      <a class="btn btn-sm btn-outline-light me-2" routerLink="/login">Autentificare</a>
+      <a class="btn btn-sm btn-light" routerLink="/register">Inregistrare</a>
+    }
+  </div>
+</nav>
+
+<main class="container py-4 min-vh-100">
+  <router-outlet />
+</main>
+
+<footer class="py-4 text-center text-muted border-top small">
+  COSMETICO — magazin de cosmetice · proiect PAW · ASP.NET Core API + Angular
+</footer>

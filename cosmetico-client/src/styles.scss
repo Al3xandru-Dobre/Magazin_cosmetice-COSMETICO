@@ -1,0 +1,44 @@
+/* Stiluri globale — peste Bootstrap */
+
+body {
+  background-color: #fdf7f8;
+  color: #3d2b31;
+}
+
+a {
+  color: #8d4e5a;
+}
+
+.btn-primary {
+  --bs-btn-bg: #8d4e5a;
+  --bs-btn-border-color: #8d4e5a;
+  --bs-btn-hover-bg: #733d48;
+  --bs-btn-hover-border-color: #733d48;
+  --bs-btn-active-bg: #733d48;
+  --bs-btn-active-border-color: #733d48;
+}
+
+.card {
+  border: 1px solid rgba(141, 78, 90, 0.15);
+  border-radius: 0.75rem;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(141, 78, 90, 0.15);
+}
+
+.product-img {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.75rem 0.75rem 0 0;
+  background: linear-gradient(135deg, #f5e1e5 0%, #e3c3ca 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #8d4e5a;
+  font-weight: 700;
+}
+
+.text-brand {
+  color: #8d4e5a;
+}

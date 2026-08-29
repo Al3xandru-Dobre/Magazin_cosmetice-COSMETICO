@@ -32,6 +32,7 @@ public static class ProductMappings
         p.StockQuantity,
         p.ImagePath,
         p.CreatedAt,
+        p.IsActive,
         p.CategoryId,
         p.Category?.Name ?? "-",
         p.BrandId,
