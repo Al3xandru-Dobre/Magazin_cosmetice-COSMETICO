@@ -65,8 +65,13 @@ builder.Services
 // ---- Autentificare JWT ----
 // De ce JWT si nu cookies? Frontend-ul Angular ruleaza pe alt origin (alt port).
 // JWT este stateless: serverul nu tine sesiuni, tokenul se auto-valideaza.
+// CHEIA NU se pastreaza in appsettings (repo public!): local vine din user-secrets
+// (dotnet user-secrets set "Jwt:Key" "..."), in Docker din variabila Jwt__Key.
 var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key lipseste din configuratie.");
+    ?? throw new InvalidOperationException(
+        "Jwt:Key lipseste. Seteaz-o cu 'dotnet user-secrets set \"Jwt:Key\" \"...\"' " +
+        "(dev local) sau prin variabila de mediu Jwt__Key (Docker / productie). " +
+        "Minim 32 de caractere, aleatoare.");
 
 builder.Services
     .AddAuthentication(options =>

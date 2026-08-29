@@ -179,6 +179,14 @@ public class ProductService : IProductService
         var fileName = $"product-{id}{extension}";
         var fullPath = Path.Combine(imagesFolder, fileName);
 
+        // Mai intai stergem orice imagine veche a produsului cu ALTA extensie:
+        // trecerea de la .png la .jpg ar lasa altfel product-{id}.png orfan pe disc,
+        // in timp ce ImagePath ar indica spre cel nou.
+        foreach (var oldFile in Directory.GetFiles(imagesFolder, $"product-{id}.*"))
+        {
+            File.Delete(oldFile);
+        }
+
         await using (var stream = new FileStream(fullPath, FileMode.Create))
         {
             await file.CopyToAsync(stream);

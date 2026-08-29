@@ -33,7 +33,9 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:8080"
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=CosmeticoDb;User Id=sa;Password=CosmeticoSql!2026;TrustServerCertificate=True;Encrypt=False;"
-      Jwt__Key: "COSMETICO_cheie_docker_minim_32_caractere_2026!"
+      # Cheia JWT NU e hardcodata: vine din fisierul .env (gitignored) sau din
+      # variabila de mediu JWT_KEY. Vezi README -> "Securitate".
+      Jwt__Key: "${JWT_KEY:?JWT_KEY lipseste. Creeaza fisierul .env cu JWT_KEY=<minim 32 caractere>}"
     ports:
       - "8080:8080"          # http://localhost:8080/swagger
     volumes:

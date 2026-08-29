@@ -68,6 +68,20 @@ cosmetico-client/src/app/
 - `auth.guard` / `admin.guard` protejează rutele
 - formulare reactive cu validare pe client (aceleași reguli ca pe server)
 
+## Securitate — cheia JWT
+
+Cheia **nu** se află în fișierele din repo (repo public). Se configurează astfel:
+
+- **Dezvoltare locală** (`dotnet run`): user-secrets
+  ```
+  dotnet user-secrets set "Jwt:Key" "<minim 32 caractere aleatoare>"
+  ```
+- **Docker**: fișier `.env` lângă `docker-compose.yml` (gitignored):
+  ```
+  JWT_KEY=<minim 32 caractere aleatoare>
+  ```
+  compose îl injectează automat ca `Jwt__Key`. Fără el, containerul nu pornește (mesaj explicativ în loguri).
+
 ## Conturi seed
 
 | Email | Parola | Rol |
@@ -127,7 +141,9 @@ Exceptions/     — AppException, NotFound, BusinessRule, Forbidden
 - Auth & Authorization: Identity + JWT, roluri Admin/User
 - Exception handling global cu ProblemDetails (404/400/403, nu 500)
 - Paginare, filtrare, sortare pe catalog
-- Logica de comanda: snapshot de pret, total calculat pe server, verificare stoc, tranzactie unica
+- Logica de comanda: snapshot de pret, total calculat pe server, verificare stoc, tranzactie unica,
+  tranziții valide de status (Pending→Paid→Shipped→Delivered, anulare doar din Pending/Paid cu restituirea stocului),
+  protecție la race-condition pe stoc (RowVersion + concurență optimistă)
 - Frontend Angular: 8 pagini, core/shared/features, auth JWT (interceptor + guard-uri),
   rute protejate, formulare reactive cu validare, coș persistent
 - Logging cu Serilog (consolă + fișier rolling + request logging + logging în servicii)

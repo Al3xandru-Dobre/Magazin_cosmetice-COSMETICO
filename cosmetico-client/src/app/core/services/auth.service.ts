@@ -45,9 +45,22 @@ export class AuthService {
   }
 }
 
+/// Restaureaza sesiunea din localStorage, dar IGNORA tokenurile expirate.
+/// Altfel: guard-ul lasa userul pe o ruta protejata, pagina incepe sa se
+/// randeze, API-ul raspunde 401 si abea atunci interceptorul il arunca la
+/// login — un "flash" de pagina rupta. Verificarea e doar cosmetica (fara
+/// acces la ceasul serverului); autoritatea ramane serverul, prin 401.
 function readStoredUser(): AuthResponse | null {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as AuthResponse | null;
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as AuthResponse | null;
+    if (!stored) return null;
+
+    if (new Date(stored.expiresAt) <= new Date()) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+
+    return stored;
   } catch {
     return null;
   }

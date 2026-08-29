@@ -19,6 +19,20 @@ namespace Magazin_cosmetice_COSMETICO.Services;
 /// </summary>
 public class OrderService : IOrderService
 {
+    /// <summary>
+    /// Graful de tranzitii permise. Fara el, un admin ar putea muta o comanda
+    /// din Delivered inapoi in Pending sau "anula" de doua ori (restituind
+    /// stocul de doua ori). Delivered si Cancelled sunt stari finale.
+    /// </summary>
+    private static readonly Dictionary<OrderStatus, OrderStatus[]> AllowedTransitions = new()
+    {
+        [OrderStatus.Pending]   = [OrderStatus.Paid, OrderStatus.Cancelled],
+        [OrderStatus.Paid]      = [OrderStatus.Shipped, OrderStatus.Cancelled],
+        [OrderStatus.Shipped]   = [OrderStatus.Delivered],
+        [OrderStatus.Delivered] = [],
+        [OrderStatus.Cancelled] = [],
+    };
+
     private readonly IOrderRepository _orders;
     private readonly AppDbContext _context;
     private readonly ILogger<OrderService> _logger;
@@ -89,7 +103,7 @@ public class OrderService : IOrderService
         // Un singur SaveChanges: comanda + liniile + scaderile de stoc pleaca
         // impreuna, ca o singura tranzactie. O eroare intre doua salvari separate
         // ar lasa baza intr-o stare inconsistenta (comanda da, stoc nescăzut).
-        await _orders.SaveChangesAsync();
+        await SaveChangesWithStockGuardAsync();
 
         _logger.LogInformation(
             "Comanda {OrderId} plasata de userul {UserId}. Total: {Total} lei, {Lines} linii.",
@@ -135,11 +149,55 @@ public class OrderService : IOrderService
         if (order.Status == parsed)
             throw new BusinessRuleException($"Comanda are deja statusul '{parsed}'.");
 
+        var allowed = AllowedTransitions[order.Status];
+        if (!allowed.Contains(parsed))
+        {
+            var targets = allowed.Length > 0 ? string.Join(", ", allowed) : "niciuna";
+            throw new BusinessRuleException(
+                $"Tranzitie nepermisa: {order.Status} -> {parsed}. Din {order.Status} se poate trece doar in: {targets}.");
+        }
+
+        // Anularea intoarce in inventar stocul rezervat de comanda. Items au
+        // Product-ul incarcat SI urmarit de change tracker (GetByIdWithItemsAsync
+        // e cu tracking), deci modificarile ajung in acelasi SaveChanges.
+        if (parsed == OrderStatus.Cancelled)
+        {
+            foreach (var item in order.Items)
+            {
+                if (item.Product is not null)
+                    item.Product.StockQuantity += item.Quantity;
+            }
+
+            _logger.LogInformation(
+                "Comanda {OrderId} anulata: stoc restituit pentru {Lines} linii.", id, order.Items.Count);
+        }
+
         order.Status = parsed;
-        await _orders.SaveChangesAsync();
+
+        await SaveChangesWithStockGuardAsync();
 
         _logger.LogInformation("Status comanda {OrderId} schimbat in {Status}", id, parsed);
 
         return order.ToDto();
+    }
+
+    /// <summary>
+    /// SaveChanges protejat impotriva conflictului de concurenta optimista.
+    /// Product.RowVersion ([Timestamp]) face ca EF sa scrie
+    /// UPDATE ... WHERE RowVersion = @vechi. Daca alt request a modificat stocul
+    /// intre citire si scriere, UPDATE-ul afecteaza 0 randuri si EF arunca
+    /// DbUpdateConcurrencyException — pe care o traducem intr-un mesaj util.
+    /// </summary>
+    private async Task SaveChangesWithStockGuardAsync()
+    {
+        try
+        {
+            await _orders.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new BusinessRuleException(
+                "Stocul s-a modificat intre timp (altcineva a modificat produsele concomitent). Reincercati operatia.");
+        }
     }
 }

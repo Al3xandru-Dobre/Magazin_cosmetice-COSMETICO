@@ -34,6 +34,16 @@ public class Product
     /// <summary>Soft delete: produsele comandate nu se sterg fizic, se dezactiveaza.</summary>
     public bool IsActive { get; set; } = true;
 
+    /// <summary>
+    /// Token de concurenta optimista ([Timestamp] = rowversion in SQL Server).
+    /// EF adauga WHERE RowVersion = @vechi la fiecare UPDATE: doi useri care
+    /// cumpara simultan ultimul produs -> al doilea SaveChanges primeste
+    /// DbUpdateConcurrencyException in loc sa lase stocul pe -1.
+    /// Coloana e generata de baza de date; codul nu o seteaza niciodata.
+    /// </summary>
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     // ---- One-to-Many: Category are multe Product ----
     public int CategoryId { get; set; }
     public Category? Category { get; set; }

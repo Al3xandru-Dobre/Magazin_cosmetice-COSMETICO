@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 # Serilog files
 logs/
+
+# Docker compose secrets
+.env
